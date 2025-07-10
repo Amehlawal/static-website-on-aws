@@ -53,7 +53,7 @@ jobs:
           --query "Stacks[0].Outputs[?OutputKey=='CloudFrontURL'].OutputValue" \
           --output text)
 
-        DISTRIBUTION_ID=$(echo "$CLOUDFRONT_URL" | cut -d. -f1)
+        DISTRIBUTION_ID=$(echo "$CLOUDFRONT_URL" | sed 's|https://||' | cut -d. -f1)
 
         echo "Invalidating CloudFront cache for Distribution ID: $DISTRIBUTION_ID"
 
