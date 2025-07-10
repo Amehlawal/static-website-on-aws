@@ -7,7 +7,7 @@ on:
 
 env:
   STACK_NAME: StaticWebsiteStack
-  BUCKET_NAME: static-website-bucket-yourname123
+  BUCKET_NAME: static-website-bucket-uzumaki-lawal-123
   REGION: ${{ secrets.AWS_REGION }}
 
 jobs:
