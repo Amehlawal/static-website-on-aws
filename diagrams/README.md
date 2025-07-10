@@ -1,1 +1,1 @@
-![Local Image](./diagrams/staticsite.png)
+![Local Image](./staticsite.png)
