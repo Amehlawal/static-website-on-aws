@@ -7,7 +7,7 @@ on:
 
 env:
   STACK_NAME: StaticWebsiteStack
-  BUCKET_NAME: static-website-bucket
+  BUCKET_NAME: static-website-bucket-yourname123
   REGION: ${{ secrets.AWS_REGION }}
 
 jobs:
@@ -26,30 +26,37 @@ jobs:
         aws-region: ${{ env.REGION }}
 
     - name: 🏗️ Deploy CloudFormation stack
+      id: deploy_stack
       run: |
-        aws cloudformation deploy \
+        set -e
+
+        echo "Deploying CloudFormation stack..."
+        if ! aws cloudformation deploy \
           --template-file cfn/static-website.yaml \
           --stack-name $STACK_NAME \
-          --parameter-overrides WebsiteBucketName=${{ env.BUCKET_NAME }} \
-          --capabilities CAPABILITY_NAMED_IAM
+          --parameter-overrides WebsiteBucketName=${BUCKET_NAME} \
+          --capabilities CAPABILITY_NAMED_IAM; then
+          
+          echo "::error ::CloudFormation deployment failed. Fetching recent stack events..."
+          aws cloudformation describe-stack-events --stack-name $STACK_NAME --max-items 10
+          exit 1
+        fi
 
     - name: 📤 Sync static site to S3
       run: |
-        aws s3 sync website/ s3://${{ env.BUCKET_NAME }}/
+        aws s3 sync website/ s3://${BUCKET_NAME}/
 
     - name: 🚫 Invalidate CloudFront cache
       run: |
-        # Get the CloudFront distribution domain from the stack
         CLOUDFRONT_URL=$(aws cloudformation describe-stacks \
           --stack-name $STACK_NAME \
           --query "Stacks[0].Outputs[?OutputKey=='CloudFrontURL'].OutputValue" \
           --output text)
 
-        # Extract the distribution ID (e.g., d123abc456 -> d123abc456)
         DISTRIBUTION_ID=$(echo "$CLOUDFRONT_URL" | cut -d. -f1)
 
-        echo "Invalidating CloudFront distribution ID: $DISTRIBUTION_ID"
-        
+        echo "Invalidating CloudFront cache for Distribution ID: $DISTRIBUTION_ID"
+
         aws cloudfront create-invalidation \
           --distribution-id "$DISTRIBUTION_ID" \
           --paths "/*"
