@@ -71,5 +71,13 @@ Outputs:
     Value: !Ref WebsiteBucketName
 
   CloudFrontURL:
-    Description: URL of the CloudFront distribution
-    Value: !Sub "https://${CloudFrontDistribution.DomainName}"
+    Description: "The CloudFront distribution domain name"
+    Value: !GetAtt CloudFrontDistribution.DomainName
+    Export:
+      Name: !Sub "${AWS::StackName}-URL"
+
+  CloudFrontDistributionId:
+    Description: "The CloudFront distribution ID"
+    Value: !Ref CloudFrontDistribution
+    Export:
+      Name: !Sub "${AWS::StackName}-DistributionId"
